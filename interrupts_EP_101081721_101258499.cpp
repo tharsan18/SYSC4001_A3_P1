@@ -22,7 +22,7 @@ struct WaitingProcess{
     unsigned int remaining_io;
 };
 
-std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std::vector<PCB> list_processes) {
+std::tuple<std::string, std::string > run_simulation(std::vector<PCB> list_processes) {
 
     std::vector<PCB> ready_queue;   //The ready queue of processes
     std::vector<WaitingProcess> wait_queue; //The wait queue of processes
@@ -39,6 +39,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
     idle_CPU(running);
 
     std::string execution_status;
+    std::string system_status = "";
 
     //make the output table (the header row)
     execution_status = print_exec_header();
@@ -58,12 +59,14 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
             if(process.arrival_time == current_time) {//check if the AT = current time
                 //if so, assign memory and put the process into the ready queue
                 assign_memory(process);
-
+                
                 process.state = READY;  //Set the process state to READY
                 ready_queue.push_back(process); //Add the process to the ready queue
                 job_list.push_back(process); //Add it to the list of processes
 
                 execution_status += print_exec_status(current_time, process.PID, NEW, READY);
+                system_status += "time: " + std::to_string(current_time) + ": " + print_process_input(process) + "\n";
+                system_status += print_PCB(job_list);
             }
         }
 
@@ -101,7 +104,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
             ready_queue.erase(ready_queue.begin());
 
             states old_state = next.state;
-            next.state = RUNNING; 
+            next.state = RUNNING;
 
             running = next;
             cpu_idle = false; //cpu is not idle anymore
@@ -111,6 +114,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
             for (auto &p : job_list) {
                 if (p.PID == running.PID) {
                     p.state = RUNNING;
+                    p.start_time = current_time;
                     break;
                 }   
             }           
@@ -133,6 +137,8 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
                     }
                 }
                 free_memory(running); //release from memory
+                system_status += "time: " + std::to_string(current_time) + ": " + print_process_input(running) + "\n";
+                system_status += print_PCB(job_list);
 
                 cpu_idle = true;
                 idle_CPU(running);
@@ -214,7 +220,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
     //Close the output table
     execution_status += print_exec_footer();
 
-    return std::make_tuple(execution_status);
+    return {execution_status, system_status};
 }
 
 
@@ -223,7 +229,7 @@ int main(int argc, char** argv) {
     //Get the input file from the user
     if(argc != 2) {
         std::cout << "ERROR!\nExpected 1 argument, received " << argc - 1 << std::endl;
-        std::cout << "To run the program, do: ./interrutps <your_input_file.txt>" << std::endl;
+        std::cout << "To run the program, do: ./interrupts_EP_101081721_101258499 <your_input_file.txt>" << std::endl;
         return -1;
     }
 
@@ -250,9 +256,10 @@ int main(int argc, char** argv) {
     input_file.close();
 
     //With the list of processes, run the simulation
-    auto [exec] = run_simulation(list_process);
+    auto [exec, system_status] = run_simulation(list_process);
 
     write_output(exec, "execution.txt");
+    write_output(system_status, "system_status.txt");
 
     return 0;
 }
