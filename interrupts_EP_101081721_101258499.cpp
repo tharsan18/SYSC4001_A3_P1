@@ -59,7 +59,7 @@ std::tuple<std::string, std::string > run_simulation(std::vector<PCB> list_proce
             if(process.arrival_time == current_time) {//check if the AT = current time
                 //if so, assign memory and put the process into the ready queue
                 assign_memory(process);
-                
+
                 process.state = READY;  //Set the process state to READY
                 ready_queue.push_back(process); //Add the process to the ready queue
                 job_list.push_back(process); //Add it to the list of processes
@@ -105,6 +105,9 @@ std::tuple<std::string, std::string > run_simulation(std::vector<PCB> list_proce
 
             states old_state = next.state;
             next.state = RUNNING;
+            if (next.start_time == -1) {
+                next.start_time = current_time;
+            }
 
             running = next;
             cpu_idle = false; //cpu is not idle anymore
@@ -114,7 +117,9 @@ std::tuple<std::string, std::string > run_simulation(std::vector<PCB> list_proce
             for (auto &p : job_list) {
                 if (p.PID == running.PID) {
                     p.state = RUNNING;
-                    p.start_time = current_time;
+                    if (p.start_time == -1) {
+                        p.start_time = current_time;
+                    }
                     break;
                 }   
             }           
@@ -133,6 +138,8 @@ std::tuple<std::string, std::string > run_simulation(std::vector<PCB> list_proce
                     if (p.PID == running.PID){
                         p.completion_time = current_time; //saving finish time (for bonus)
                         p.state = TERMINATED;
+                        p.partition_number = -1; //unallocate memory partition
+                        p.remaining_time = running.remaining_time;
                         break;
                     }
                 }

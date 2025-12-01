@@ -124,7 +124,7 @@ std::string print_PCB(std::vector<PCB> _PCB) {
     
     // Print each PCB entry
     for (const auto& program : _PCB) {
-        if (program.state == NOT_ASSIGNED || program.state == TERMINATED) {
+        if (program.state == NOT_ASSIGNED) {
             continue; // Skip printing if the process is not assigned
         }
         buffer << "|"
@@ -287,7 +287,7 @@ PCB add_process(std::vector<std::string> tokens) {
 }
 
 std::string print_process_input(PCB process) {
-    std::string inputLine = "PID: " + std::to_string(process.PID) + ", Mem Size: " + std::to_string(process.size) + ", Arival T: " + std::to_string(process.arrival_time)
+    std::string inputLine = "PID: " + std::to_string(process.PID) + ", Mem Size: " + std::to_string(process.size) + ", Arrival T: " + std::to_string(process.arrival_time)
               + ", CPU T: " + std::to_string(process.processing_time)
               + ", IO Freq: " + std::to_string(process.io_freq) + ", IO Dur: " + std::to_string(process.io_duration) + "\n";
     return inputLine;
